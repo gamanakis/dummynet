@@ -621,7 +621,7 @@ netisr_dispatch(int num, struct mbuf *m)
 #endif
 
 	/* XXX to obey one-pass, possibly call the queue handler here */
-	REINJECT(info, ((num == -1)?NF_DROP:NF_STOP));	/* accept but no more firewall */
+	REINJECT(info, ((num == -1)?NF_DROP:NF_ACCEPT));	/* accept */
 }
 
 /*
@@ -730,8 +730,8 @@ linux_lookup(const int proto, const __be32 saddr, const __be16 sport,
 #define _CURR_GID f_gid
 #else /* 2.6.29 and above */
 /* use the current's file access real uid/gid */
-#define _CURR_UID f_cred->fsuid
-#define _CURR_GID f_cred->fsgid
+#define _CURR_UID f_cred->fsuid.val
+#define _CURR_GID f_cred->fsgid.val
 #endif
 
 #define GOOD_STATES (	\
@@ -824,14 +824,18 @@ nf_unregister_hooks(struct nf_hook_ops *ops, int n)
 
 static struct nf_hook_ops ipfw_ops[] __read_mostly = {
         {
+		{ NULL, NULL },
                 .hook           = call_ipfw,
+		NULL,
                 .pf             = PF_INET,
                 .hooknum        = IPFW_HOOK_IN,
                 .priority       = NF_IP_PRI_FILTER,
                 SET_MOD_OWNER
         },
         {
+		{ NULL, NULL },
                 .hook           = call_ipfw,
+		NULL,
                 .pf             = PF_INET,
                 .hooknum        = NF_IP_POST_ROUTING,
                 .priority       = NF_IP_PRI_FILTER,

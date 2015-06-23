@@ -334,6 +334,14 @@ struct ifaltq {
 #define	if_xname	name
 #define	if_snd		XXX
 /* search local the ip addresses, used for the "me" keyword */
+
+struct ptr_heap {
+	void ** ptrs;
+	int max;
+	int size;
+	int (*gt)(void *, void *);
+};
+
 #include <linux/inetdevice.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25)
