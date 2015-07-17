@@ -469,7 +469,7 @@ static unsigned int
 call_ipfw(
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,13,0)
 	unsigned int hooknum,
-#else
+#else 
 	const struct nf_hook_ops *hooknum,
 #endif
 
@@ -478,12 +478,21 @@ call_ipfw(
 #else
 	struct sk_buff  *skb,
 #endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,1,0)
 	const struct net_device *in, const struct net_device *out,
 	int (*okfn)(struct sk_buff *))
 {
 	(void)hooknum; (void)skb; (void)in; (void)out; (void)okfn; /* UNUSED */
 	return NF_QUEUE;
 }
+#else
+	const struct nf_hook_state *state)
+{
+	(void)hooknum; (void)skb; (void)state; /* UNUSED */
+	return NF_QUEUE;
+}
+#endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,12)	/* XXX was 2.6.0 */
 #define	NF_STOP		NF_ACCEPT
@@ -556,7 +565,7 @@ ipfw2_queue_handler(QH_ARGS)
 	m->m_skb = skb;
 	m->m_len = skb->len;		/* len from ip header to end */
 	m->m_pkthdr.len = skb->len;	/* total packet len */
-	m->m_pkthdr.rcvif = info->indev;
+	m->m_pkthdr.rcvif = info->state.in;
 	m->queue_entry = info;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)	/* XXX was 2.6.0 */
 	m->m_data = (char *)skb->nh.iph;
@@ -565,10 +574,10 @@ ipfw2_queue_handler(QH_ARGS)
 #endif
 
 	/* XXX add the interface */
-	if (info->hook == IPFW_HOOK_IN) {
-		ret = ipfw_check_hook(NULL, &m, info->indev, PFIL_IN, NULL);
+	if (info->state.hook == IPFW_HOOK_IN) {
+		ret = ipfw_check_hook(NULL, &m, info->state.in, PFIL_IN, NULL);
 	} else {
-		ret = ipfw_check_hook(NULL, &m, info->outdev, PFIL_OUT, NULL);
+		ret = ipfw_check_hook(NULL, &m, info->state.out, PFIL_OUT, NULL);
 	}
 
 	if (m != NULL) {	/* Accept. reinject and free the mbuf */
