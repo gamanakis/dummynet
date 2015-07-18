@@ -97,6 +97,9 @@ static inline int inet_iif(const struct sk_buff *skb)
 }
 
 #else
+#ifdef _NET_IPV6_H
+#undef _NET_IPV6_H
+#endif
 #include <net/inet_hashtables.h>	/* inet_lookup */
 #endif
 #endif /* __linux__ */
