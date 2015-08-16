@@ -85,11 +85,7 @@
 
 #ifdef __linux__
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,1,0)
-#ifdef _NET_IPV6_H
-#undef _NET_IPV6_H
-#endif
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,13)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,13)
 /* XXX was < 2.6.0:  inet_hashtables.h is introduced in 2.6.14 */
 // #warning --- inet_hashtables not present on 2.4
 #include <linux/tcp.h>
@@ -101,8 +97,14 @@ static inline int inet_iif(const struct sk_buff *skb)
 }
 
 #else
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,1,0)
+#ifdef _NET_IPV6_H
+#undef _NET_IPV6_H
+#endif
+#endif
 #include <net/inet_hashtables.h>	/* inet_lookup */
 #endif
+
 #endif /* __linux__ */
 
 #include <net/route.h>			/* inet_iif */
